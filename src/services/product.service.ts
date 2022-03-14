@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Product } from 'src/entities/product.entity';
 
 @Injectable()
@@ -20,7 +20,11 @@ export class ProductService {
   }
 
   findOne(id: number) {
-    return this.products.find((item) => item.id == id);
+    const product = this.products.find((item) => item.id == id);
+    if (!product) {
+      throw new NotFoundException(`Product #${id} not found.`);
+    }
+    return product;
   }
 
   create(payload: any) {
@@ -39,31 +43,35 @@ export class ProductService {
   update(id: number, payload: any) {
     const product = this.findOne(id);
 
-    if (product) {
-      const productIndex = this.products.findIndex((item) => {
-        return item.id == id;
-      });
-
-      this.products[productIndex] = {
-        ...product,
-        ...payload,
-      };
-      return this.products[productIndex];
+    if (!product) {
+      throw new NotFoundException(`Product #${id} not found to update.`);
     }
 
-    return null;
+    const productIndex = this.products.findIndex((item) => {
+      return item.id == id;
+    });
+
+    this.products[productIndex] = {
+      ...product,
+      ...payload,
+    };
+
+    return this.products[productIndex];
   }
 
   delete(id: number) {
     const product = this.findOne(id);
 
-    if (product) {
-      const productIndex = this.products.findIndex((item) => {
-        return item.id === id;
-      });
-
-      this.products.splice(productIndex, 1);
+    if (!product) {
+      throw new NotFoundException(`Product #${id} not found to update.`);
     }
+
+    const productIndex = this.products.findIndex((item) => {
+      return item.id === id;
+    });
+
+    this.products.splice(productIndex, 1);
+
     return this.products;
   }
 }
